@@ -1,0 +1,123 @@
+# Поиск минимального по длине слова в строке 
+# (слова состоят из символов 1 и 0 и разделены пробелом)
+
+input: '1010 11111 010 01'
+blank: ' '
+start state: first_word
+table:
+  # Первое слово.
+  first_word:
+    0: {write: x, R: move_to_second}
+    1: {write: w, R: move_to_second}
+    [x, w]: R
+    ' ': {L: first_is_small}
+  # Движение ко второму слову
+  move_to_second:
+    [0, 1]: R
+    ' ': {R: second_word}
+  # Второе слово.
+  second_word:
+    ' ': {L: one_left}
+    0: {write: x, L: move_to_first}
+    1: {write: w, L: move_to_first}
+    [x, w]: {R: second_not_null}
+  # Для корректного завершения
+  second_not_null:
+    [x, w]: R
+    0: {write: x, L: move_to_first}
+    1: {write: w, L: move_to_first}
+    ' ': {L: second_is_small}
+  # Движение к первому слову
+  move_to_first:
+    [x, w]: L
+    ' ': {L: move_to_begin_first}
+  # Движение к началу первого слова
+  move_to_begin_first:
+    [0, 1, x, w]: L
+    ' ': {R: first_word}
+  # Один шаг влево для завершения
+  one_left:
+    ' ': {L: restore_and_exit}
+  # Восстановить значение и завершить
+  restore_and_exit:
+    x: {write: 0, L}
+    w: {write: 1, L}
+    [0, 1]: L
+    ' ': {R: done}
+  #-----------------------------------
+  # Первое слово меньше, заменяем им второе
+  first_is_small:
+    [x, w]: L
+    ' ': {R: restore_0_1_in_first}
+  # Восстановить 0 и 1 в первом слове
+  restore_0_1_in_first:
+    x: {write: 0, R}
+    w: {write: 1, R}
+    ' ': {R: paste_x_in_second}
+  # Заполнить второе слово символами x для корректного копирования
+  paste_x_in_second:
+    [x, w, 0, 1]: {write: x, R}
+    ' ': {L: return_to_first_and_copy}
+  # Вернуться к первому слову и начать копирование
+  return_to_first_and_copy:
+    x: L
+    ' ': {L: copy_first}
+  # Копирование первого
+  copy_first:
+    [x, w]: L
+    0: {write: x, R: carry_0_to_second}
+    1: {write: w, R: carry_1_to_second}
+    ' ': {R: delete_first_word}
+  # Перенести 0 для второго слова
+  carry_0_to_second:
+    [x, w]: R
+    ' ': {R: carry_0_in_second}
+  # Перенести 0 внутри второго слова
+  carry_0_in_second:
+    x: R
+    [0, 1, ' ']: {L: set_0_and_return}
+  # Записать 0, вернуться и продолжить копирование
+  set_0_and_return:
+    x: {write: 0, L: return_to_first_and_copy}
+    ' ': {L: return_to_first_and_copy}
+  # Перенести 1 для второго слова
+  carry_1_to_second:
+    [x, w]: R
+    ' ': {R: carry_1_in_second}
+  # Перенести 1 внутри второго слова
+  carry_1_in_second:
+    x: R
+    [0, 1, ' ']: {L: set_1_and_return}
+  # Записать 1, вернуться и продолжить копирование
+  set_1_and_return:
+    x: {write: 1, L: return_to_first_and_copy}
+    ' ': {L: return_to_first_and_copy}
+  # Удалить остатки первого слова
+  delete_first_word:
+    [x, w]: {write: ' ', R}
+    [0, 1]: {L: move_to_begin_first}
+    ' ': {R: delete_begin_second_word}
+  # Удалить остатки второго слова
+  delete_begin_second_word:
+    [x, w]: {write: ' ', R}
+    [0, 1]: {L: move_to_begin_first}
+    ' ': {R: done}
+  #-----------------------------------
+  # Второе слово оказалось меньше
+  second_is_small:
+    [x, w]: L
+    ' ': {L: to_begin_first_and_delete}
+  # Перейти к началу первого слова и удалить его
+  to_begin_first_and_delete:
+    [0, 1, x, w]: L
+    ' ': {R: delete_first}
+  # Удаление
+  delete_first:
+    [0, 1, x, w]: {write: ' ', R}
+    ' ': {R: restore_second}
+  # Восстановление ранее второго слова, которое теперь первое
+  restore_second:
+    x: {write: 0, R}
+    w: {write: 1, R}
+    ' ': {L: move_to_begin_first}
+  done:

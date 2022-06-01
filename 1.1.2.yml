@@ -1,0 +1,53 @@
+# Умножение двух унарных чисел
+
+input: '11*1111'
+blank: ' '
+start state: put_eq
+table:
+  # Двигаемся вправо,  пока есть 1, затем ставим =
+  put_eq:
+    [1, '*']: R
+    ' ': {write: =, L: left}
+  # Двигаемся влево, пока есть * или 1
+  left:
+    [1, '*']: L
+    ' ': {R: start_mult}
+  # Умножение
+  start_mult:
+    1: {write: x, R: to_second}
+    x: R
+    '*': {L: to_left_end}
+  # Двигаемся вправо ко второму числу
+  to_second:
+    1: R
+    '*': {R: second}
+  # Заменяем первую 1 на x
+  second:
+    x: R
+    1: {write: x, R: to_answer}
+    =: {L: restore_second}
+  # Двигаемся вправо и переносим единицу в ответ
+  to_answer:
+    [1, =]: R
+    ' ': {write: 1, L: back_to_second}
+  # Возвращение ко второму множителю
+  back_to_second:
+    [1, =]: L
+    x: {R: second}
+  # Восстановить второй множитель (обработка второго множителя закончена)
+  restore_second:
+    x: {write: 1, L}
+    '*': {L: to_first}
+  # Перейти к необработанному разряду
+  to_first:
+    1: L
+    x: {R: start_mult}
+  # Движение к левому краю
+  to_left_end:
+    x: L
+    ' ': {R: del_input}
+  # Очистить входные данные
+  del_input:
+    [1, '*', x]: {write: ' ', R: del_input}
+    =: {write: ' ', R: done}
+  done:

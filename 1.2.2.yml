@@ -1,0 +1,70 @@
+# Проверка соблюдения правильности скобок в строке (минимум 3 вида скобок) 
+# (), [], {}  
+
+input: '({}[()])[]'
+blank: ' '
+start state: left
+table:
+  # Смотрим слева
+  left:
+    ' ': {L: to_begin}
+    x: R
+    ['(', '{', '[']: {R: after_left_bracket}
+    ')': {write: x, L: after_right_round}
+    ']': {write: x, L: after_right_square}
+    '}': {write: x, L: after_right_figure}
+  # Левая скобка
+  after_left_bracket:
+    ' ': {L: fail}
+    ['(', '{', '[', 'x']: R
+    ')': {write: x, L: after_right_round}
+    ']': {write: x, L: after_right_square}
+    '}': {write: x, L: after_right_figure}
+  # Правая круглая скобка
+  after_right_round:
+    x: L
+    '(': {write: x, L: try_left}
+    ['{', '[']: {write: x, L: fail}
+    ' ': {R: fail}
+  # Правая квадратная скобка
+  after_right_square:
+    x: L
+    '[': {write: x, L: try_left}
+    ['{', '(']: {write: x, L: fail}
+    ' ': {R: fail}
+  # Правая фигурная скобка
+  after_right_figure:
+    x: L
+    '{': {write: x, L: try_left}
+    ['(', '[']: {write: x, L: fail}
+    ' ': {R: fail}
+  # Просмотр пусто ли слева
+  try_left:
+    ' ': {R: left}
+    [x, '{', '[', '(']: {R: back_to_left}
+  # Переход влево
+  back_to_left:
+    x: {L: left}
+    ' ': L
+  # Переход в начало слова при успехе
+  to_begin:
+    ' ': {R: done}
+    x: L
+  # Успех
+  done:
+    [x, ' ']: {write: y, R: to_end}
+  # Переход в конец слова
+  to_end:
+    [x, '{', '[', '(', '}', ']', ')']: R
+    ' ': {L: clear_all}
+  # Стираем все исходные символы
+  clear_all: 
+    [x, '{', '[', '(', '}', ']', ')']: {write: ' ', L}
+    y: L
+    ' ': {R: exit}
+  # Неудача
+  fail:
+    [x, '{', '[', '(', '}', ']', ')', ' ']: {R: to_end}
+  # Выход
+  exit:
+    ' ': {write: n, R: back_to_left}

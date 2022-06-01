@@ -1,0 +1,40 @@
+# Принадлежность к языку L = {0^n1^n2^n}, n>=0
+
+input: '001122'
+blank: ' '
+start state: zero
+table:
+  # 0
+  zero:
+    ' ': {L: done}
+    0: {write: x, R: one}
+    [1, 2]: {R: fail}
+    x: R
+  # 1
+  one:
+    [0, x]: R
+    1: {write: x, R: two}
+    [2, ' ']: {L: fail}
+  # 2
+  two:
+    [1, x]: R
+    2: {write: x, L: back_to_start}
+    ' ': {L: fail}
+  # Переход к началу
+  back_to_start:
+    [0, 1, 2, x]: L
+    ' ': {R: zero}
+  # успех, стираем все и пишем букву y
+  done:
+    x: {write: ' ', L}
+    ' ': {write: y, R: exit}
+  # неуспех
+  fail:
+    [x, 0, 1, 2]: R
+    ' ': {L: remove}
+  # Стирием все и пишем букву n
+  remove:
+    [x, 0, 1, 2]: {write: ' ', L}
+    ' ': {write: n, R: exit}
+  exit:
+    ' ': L
